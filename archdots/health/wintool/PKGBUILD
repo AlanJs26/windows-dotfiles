@@ -1,0 +1,35 @@
+description='runs a wintool.json file with some tweaks'
+url=''
+depends=()
+source=()
+# source_on_check=false
+# make this health script platform specific. Supported platforms: linux, windows 
+platform='windows'
+
+# All items of source will be downloaded and extracted (when necessary)
+# all downloaded (or extracted folders) are stored inside ${sourced[@]}
+# This script is ran inside a folder over ~/.cache/archdots/pkgname, where all sources are downloaded
+#
+# $PKGPATH has the path to folder containing this file 
+
+# This function is used to configure the health script
+install() {
+    & ([ScriptBlock]::Create((irm "https://christitus.com/win"))) -Config "$PKGPATH/wintool.json" -Run
+    New-Item "~/.wintool_ok" -ItemType File
+}
+
+# This function is used to unconfigure the health script
+uninstall() {
+    Write-Host "You may need to undo the tweaks by yourself"
+    Write-Host "Look $PKGPATH/wintool.json and undo the tweaks by running the full gui"
+    Write-Host "irm \"https://christitus.com/win\" | iex"
+    Remove-Item -Path "~/.wintool_ok" -Force
+}
+
+# This function should end with exit code 0 when the health script is configured
+# and end with exit code 1 when it is unconfigured
+check() {
+    if (-Not (Test-Path "~/.wintool_ok" -PathType Leaf)) {
+        exit 1
+    }
+}

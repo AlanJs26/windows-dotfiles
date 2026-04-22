@@ -1,0 +1,26 @@
+chezmoi:
+- ~/.config/archdots
+ignored_pkgs:
+  winget:
+  - Microsoft.UI.Xaml.2.8
+  - Microsoft.VCRedist.2015+.x64
+  - Microsoft.WindowsAppRuntime.1.8
+  - Microsoft.VCLibs.Desktop.14
+  - Microsoft.VCLibs.14
+pkgs:
+  scoop:
+  - chezmoi
+  winget:
+  - Microsoft.WindowsTerminal
+  - Neovim.Neovim
+  - Microsoft.AppInstaller
+  - Microsoft.VisualStudioCode
+  - GitHub.cli
+  - Vivaldi.Vivaldi
+  - Starship.Starship
+  - qBittorrent.qBittorrent
+  - Git.Git
+  - jasongin.nvs
+  - chrisant996.Clink
+  - Vencord.Vesktop
+  - Oven-sh.Bun
