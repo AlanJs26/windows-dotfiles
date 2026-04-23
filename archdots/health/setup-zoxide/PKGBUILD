@@ -1,0 +1,182 @@
+description='ensures zoxide is installed and configured in PowerShell and Clink'
+url='https://github.com/ajeetdsouza/zoxide'
+depends=('winget:ajeetdsouza.zoxide')
+source=()
+# source_on_check=false
+# make this health script platform specific. Supported platforms: linux, windows 
+platform='windows'
+
+# All items of source will be downloaded and extracted (when necessary)
+# all downloaded (or extracted folders) are stored inside ${sourced[@]}
+# This script is ran inside a folder over ~/.cache/archdots/pkgname, where all sources are downloaded
+#
+# $PKGPATH has the path to folder containing this file 
+
+# This function is used to configure the health script
+install() {
+    $profilePath = $PROFILE.CurrentUserAllHosts
+    $profileDir = Split-Path -Parent $profilePath
+
+    if (-not (Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+    }
+    if (-not (Test-Path $profilePath)) {
+        New-Item -ItemType File -Path $profilePath -Force | Out-Null
+    }
+
+    $powershellInitLine = 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
+    $currentProfile = Get-Content $profilePath -ErrorAction SilentlyContinue
+    if (-not ($currentProfile | Where-Object { $_ -eq $powershellInitLine })) {
+        Add-Content -Path $profilePath -Value $powershellInitLine
+    }
+
+    $clinkScriptDir = Join-Path $env:LOCALAPPDATA 'archdots\clink\zoxide'
+    $clinkScriptPath = Join-Path $clinkScriptDir 'zoxide.lua'
+
+    if (-not (Test-Path $clinkScriptDir)) {
+        New-Item -ItemType Directory -Path $clinkScriptDir -Force | Out-Null
+    }
+
+    $clinkScript = @'
+-- zoxide support for Clink.
+
+settings.add('zoxide.cmd', 'z', 'Changes the prefix of the aliases')
+settings.add('zoxide.hook', { 'pwd', 'prompt', 'none' }, 'Changes when directory scores are incremented')
+settings.add('zoxide.no_aliases', false, "Don't define aliases")
+
+local function quote_cmd_text(text)
+    return '"' .. tostring(text):gsub('"', '\\"') .. '"'
+end
+
+local function run_zoxide_query(options, query)
+    local command = 'zoxide query ' .. options
+    if query ~= nil and query ~= '' then
+        command = command .. ' -- ' .. query
+    end
+
+    local handle = io.popen(command .. ' 2>nul')
+    if not handle then
+        return nil
+    end
+
+    local result = handle:read('*line')
+    handle:close()
+
+    if result == nil or result == '' then
+        return nil
+    end
+
+    return 'cd /d ' .. quote_cmd_text(result)
+end
+
+local oldpwd
+local function zoxide_hook()
+    local hook_mode = settings.get('zoxide.hook')
+    if hook_mode == 'none' then
+        return
+    end
+
+    local cwd = os.getcwd()
+    if hook_mode == 'prompt' then
+        os.execute('zoxide add -- ' .. quote_cmd_text(cwd))
+    elseif hook_mode == 'pwd' then
+        if oldpwd ~= cwd then
+            oldpwd = cwd
+            os.execute('zoxide add -- ' .. quote_cmd_text(cwd))
+        end
+    end
+end
+
+clink.onbeginedit(zoxide_hook)
+
+local function onfilterinput(text)
+    local command, rest = text:match('^%s*(%S+)%s*(.*)$')
+    if command == nil then
+        return
+    end
+
+    local zoxide_cmd = settings.get('zoxide.cmd')
+    local no_aliases = settings.get('zoxide.no_aliases')
+
+    if command == '__zoxide_z' or (command == zoxide_cmd and not no_aliases) then
+        local rewritten = run_zoxide_query('--exclude ' .. quote_cmd_text(os.getcwd()), rest)
+        if rewritten then
+            return rewritten, false
+        end
+    elseif command == '__zoxide_zi' or (command == zoxide_cmd .. 'i' and not no_aliases) then
+        local rewritten = run_zoxide_query('--interactive', rest)
+        if rewritten then
+            return rewritten, false
+        end
+    end
+end
+
+clink.onfilterinput(onfilterinput)
+'@
+
+    Set-Content -Path $clinkScriptPath -Value $clinkScript -Encoding UTF8
+
+    try {
+        & cmd /c "`"%programfiles(x86)%\clink\clink`" installscripts $clinkScriptDir" | Out-Null
+    } catch {
+        throw
+    }
+}
+
+# This function is used to unconfigure the health script
+uninstall() {
+    $profilePath = $PROFILE.CurrentUserAllHosts
+    $powershellInitLine = 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
+
+    if (Test-Path $profilePath) {
+        $updated = Get-Content $profilePath -ErrorAction SilentlyContinue | Where-Object { $_ -ne $powershellInitLine }
+        Set-Content -Path $profilePath -Value $updated
+    }
+
+    $clinkScriptDir = Join-Path $env:LOCALAPPDATA 'archdots\clink\zoxide'
+    $clinkScriptPath = Join-Path $clinkScriptDir 'zoxide.lua'
+
+    try {
+        & cmd /c "`"%programfiles(x86)%\clink\clink`" uninstallscripts $clinkScriptDir" | Out-Null
+    } catch {
+    }
+
+    if (Test-Path $clinkScriptPath) {
+        Remove-Item -Path $clinkScriptPath -Force
+    }
+    if (Test-Path $clinkScriptDir) {
+        Remove-Item -Path $clinkScriptDir -Force -Recurse
+    }
+}
+
+# This function should end with exit code 0 when the health script is configured
+# and end with exit code 1 when it is unconfigured
+check() {
+    $powershellInitLine = 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
+    $profilePath = $PROFILE.CurrentUserAllHosts
+    $hasProfileLine = $false
+
+    if (Test-Path $profilePath) {
+        $hasProfileLine = Select-String -Path $profilePath -SimpleMatch $powershellInitLine -Quiet
+    }
+
+    $clinkScriptDir = Join-Path $env:LOCALAPPDATA 'archdots\clink\zoxide'
+    $clinkScriptPath = Join-Path $clinkScriptDir 'zoxide.lua'
+    $hasClinkScript = Test-Path $clinkScriptPath -PathType Leaf
+    $hasClinkPath = $false
+
+    try {
+        $clinkInfo = & cmd /c "`"%programfiles(x86)%\clink\clink`" info" 2>$null
+        if ($clinkInfo) {
+            $hasClinkPath = ($clinkInfo | Out-String) -match [regex]::Escape($clinkScriptDir)
+        }
+    } catch {
+        $hasClinkPath = $false
+    }
+
+    if ($hasProfileLine -and $hasClinkScript -and $hasClinkPath) {
+        exit 0
+    }
+
+    exit 1
+}

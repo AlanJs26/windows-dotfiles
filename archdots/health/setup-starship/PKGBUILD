@@ -1,61 +1,76 @@
-description='ensures starship prompt is installed and configured'
-url=''
-depends=('winget:Starship.Starship')
+description='Configura o Starship Prompt no PowerShell e no CMD (via Clink)'
+url='https://starship.rs'
+depends=('winget:Starship.Starship' 'winget:chrisant996.Clink')
 source=()
-# source_on_check=false
-# make this health script platform specific. Supported platforms: linux, windows 
 platform='windows'
 
-# All items of source will be downloaded and extracted (when necessary)
-# all downloaded (or extracted folders) are stored inside ${sourced[@]}
-# This script is ran inside a folder over ~/.cache/archdots/pkgname, where all sources are downloaded
-#
-# $PKGPATH has the path to folder containing this file 
-
-# This function is used to configure the health script
 install() {
+    # Redefinição local de variáveis (necessário para o parser)
+    $clinkScriptsDir = Join-Path $env:LOCALAPPDATA "clink"
+    $starshipLua = Join-Path $clinkScriptsDir "starship.lua"
+    $initLine = 'Invoke-Expression (&starship init powershell)'
+    $clinkExe = Join-Path ${env:ProgramFiles(x86)} "clink\clink.exe"
+
+    # --- 1. Configuração PowerShell ---
     $profilePath = $PROFILE.CurrentUserAllHosts
     $profileDir = Split-Path -Parent $profilePath
+    
+    if (-not (Test-Path $profileDir)) { New-Item -ItemType Directory -Path $profileDir -Force | Out-Null }
+    if (-not (Test-Path $profilePath)) { New-Item -ItemType File -Path $profilePath -Force | Out-Null }
 
-    if (-not (Test-Path $profileDir)) {
-        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
-    }
-    if (-not (Test-Path $profilePath)) {
-        New-Item -ItemType File -Path $profilePath -Force | Out-Null
+    $alreadyExists = Select-String -Path $profilePath -Pattern $initLine -SimpleMatch -Quiet
+    if (-not $alreadyExists) {
+        Add-Content -Path $profilePath -Value "`n$initLine"
     }
 
-    $initLine = 'Invoke-Expression (&starship init powershell)'
-    $current = Get-Content $profilePath -ErrorAction SilentlyContinue
-    if (-not ($current | Where-Object { $_ -eq $initLine })) {
-        Add-Content -Path $profilePath -Value $initLine
+    # --- 2. Configuração Clink (CMD) ---
+    if (-not (Test-Path $clinkScriptsDir)) { New-Item -ItemType Directory -Path $clinkScriptsDir -Force | Out-Null }
+    
+    $luaContent = 'load(io.popen("starship init cmd"):read("*a"))()'
+    Set-Content -Path $starshipLua -Value $luaContent -Encoding UTF8
+
+    if (Test-Path $clinkExe) {
+        & $clinkExe autorun --install
     }
 }
 
-# This function is used to unconfigure the health script
 uninstall() {
-    $profilePath = $PROFILE.CurrentUserAllHosts
+    $clinkScriptsDir = Join-Path $env:LOCALAPPDATA "clink"
+    $starshipLua = Join-Path $clinkScriptsDir "starship.lua"
     $initLine = 'Invoke-Expression (&starship init powershell)'
+    $clinkExe = Join-Path ${env:ProgramFiles(x86)} "clink\clink.exe"
 
+    # Remove do PowerShell
+    $profilePath = $PROFILE.CurrentUserAllHosts
     if (Test-Path $profilePath) {
-        $updated = Get-Content $profilePath -ErrorAction SilentlyContinue | Where-Object { $_ -ne $initLine }
-        Set-Content -Path $profilePath -Value $updated
+        $content = Get-Content $profilePath | Where-Object { $_ -ne $initLine }
+        Set-Content -Path $profilePath -Value $content
     }
+
+    # Remove do Clink
+    if (Test-Path $starshipLua) { Remove-Item $starshipLua -Force }
 }
 
-# This function should end with exit code 0 when the health script is configured
-# and end with exit code 1 when it is unconfigured
 check() {
-    $hasStarship = (Get-Command starship -ErrorAction SilentlyContinue) -ne $null
+    $clinkScriptsDir = Join-Path $env:LOCALAPPDATA "clink"
+    $starshipLua = Join-Path $clinkScriptsDir "starship.lua"
+    $initLine = 'Invoke-Expression (&starship init powershell)'
+    $clinkExe = Join-Path ${env:ProgramFiles(x86)} "clink\clink.exe"
+
+    # Verifica PowerShell
     $profilePath = $PROFILE.CurrentUserAllHosts
-    $hasInitLine = $false
-
-    if (Test-Path $profilePath) {
-        $hasInitLine = Select-String -Path $profilePath -SimpleMatch 'Invoke-Expression (&starship init powershell)' -Quiet
+    $hasPs = $false
+    if (Test-Path $profilePath) { 
+        $hasPs = Select-String -Path $profilePath -Pattern $initLine -SimpleMatch -Quiet 
     }
 
-    if ($hasStarship -and $hasInitLine) {
-        exit 0
+    # Verifica Clink
+    $hasClinkLua = Test-Path $starshipLua
+    $clinkAutorun = $false
+    if (Test-Path $clinkExe) {
+        if ((& $clinkExe autorun show) -match "Current AutoRun values") { $clinkAutorun = $true }
     }
 
+    if ($hasPs -and $hasClinkLua -and $clinkAutorun) { exit 0 }
     exit 1
 }
