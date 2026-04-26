@@ -1,0 +1,55 @@
+description='Configura o Atuin no PowerShell e importa o histórico local'
+url='https://atuin.sh/'
+depends=('winget:Atuinsh.Atuin')
+source=()
+platform='windows'
+
+install() {
+    $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
+    $profileDir = Split-Path -Parent $profilePath
+
+    if (-not (Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+    }
+    if (-not (Test-Path $profilePath)) {
+        New-Item -ItemType File -Path $profilePath -Force | Out-Null
+    }
+
+    $atuinInitLine = 'Invoke-Expression (& { (atuin init powershell --disable-up-arrow | Out-String) })'
+    $currentProfile = Get-Content $profilePath -ErrorAction SilentlyContinue
+    if (-not ($currentProfile | Where-Object { $_ -eq $atuinInitLine })) {
+        Add-Content -Path $profilePath -Value "`n$atuinInitLine"
+    }
+
+    # Importa o histórico local se o atuin estiver disponível
+    if (Get-Command atuin -ErrorAction SilentlyContinue) {
+        Write-Host "Importando histórico local para o Atuin..."
+        atuin import auto
+    }
+}
+
+uninstall() {
+    $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
+    $atuinInitLine = 'Invoke-Expression (& { (atuin init powershell --disable-up-arrow | Out-String) })'
+
+    if (Test-Path $profilePath) {
+        $updated = Get-Content $profilePath -ErrorAction SilentlyContinue | Where-Object { $_ -ne $atuinInitLine }
+        Set-Content -Path $profilePath -Value $updated
+    }
+}
+
+check() {
+    $atuinInitLine = 'Invoke-Expression (& { (atuin init powershell --disable-up-arrow | Out-String) })'
+    $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
+    $hasProfileLine = $false
+
+    if (Test-Path $profilePath) {
+        $hasProfileLine = Select-String -Path $profilePath -SimpleMatch $atuinInitLine -Quiet
+    }
+
+    if ($hasProfileLine -and (Get-Command atuin -ErrorAction SilentlyContinue)) {
+        exit 0
+    }
+
+    exit 1
+}

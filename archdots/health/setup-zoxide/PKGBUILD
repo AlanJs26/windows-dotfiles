@@ -14,7 +14,7 @@ platform='windows'
 
 # This function is used to configure the health script
 install() {
-    $profilePath = $PROFILE.CurrentUserAllHosts
+    $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $profileDir = Split-Path -Parent $profilePath
 
     if (-not (Test-Path $profileDir)) {
@@ -125,7 +125,7 @@ clink.onfilterinput(onfilterinput)
 
 # This function is used to unconfigure the health script
 uninstall() {
-    $profilePath = $PROFILE.CurrentUserAllHosts
+    $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $powershellInitLine = 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
 
     if (Test-Path $profilePath) {
@@ -153,7 +153,7 @@ uninstall() {
 # and end with exit code 1 when it is unconfigured
 check() {
     $powershellInitLine = 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
-    $profilePath = $PROFILE.CurrentUserAllHosts
+    $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $hasProfileLine = $false
 
     if (Test-Path $profilePath) {

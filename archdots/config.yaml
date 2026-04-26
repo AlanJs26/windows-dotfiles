@@ -1,29 +1,32 @@
 chezmoi:
-- ~/.config/archdots
 - ~/Documents/WindowsPowerShell
+- ~/.config/archdots
 ignored_pkgs:
   winget:
-  - Microsoft.VCLibs.14
   - Microsoft.VCLibs.Desktop.14
-  - Microsoft.VCRedist.2015+.x64
-  - Microsoft.WindowsAppRuntime.1.8
   - Microsoft.UI.Xaml.2.8
+  - Microsoft.WindowsAppRuntime.1.8
+  - Microsoft.VCLibs.14
+  - Microsoft.VCRedist.2015+.x64
+  - Microsoft.EdgeWebView2Runtime
 pkgs:
   scoop:
   - chezmoi
   winget:
-  - chrisant996.Clink
   - Vivaldi.Vivaldi
-  - Microsoft.WindowsTerminal
-  - Neovim.Neovim
-  - Git.Git
-  - Starship.Starship
-  - jasongin.nvs
   - qBittorrent.qBittorrent
-  - Vencord.Vesktop
-  - GitHub.cli
-  - Microsoft.VisualStudioCode
   - Oven-sh.Bun
-  - Microsoft.AppInstaller
+  - Starship.Starship
+  - chrisant996.Clink
   - Microsoft.PowerShell
+  - Microsoft.WindowsTerminal
+  - jasongin.nvs
+  - GitHub.cli
+  - Microsoft.AppInstaller
+  - Neovim.Neovim
   - ajeetdsouza.zoxide
+  - Microsoft.VisualStudioCode
+  - Vencord.Vesktop
+  - Git.Git
+  - PDFArranger.PDFArranger
+  - BurntSushi.ripgrep.MSVC
