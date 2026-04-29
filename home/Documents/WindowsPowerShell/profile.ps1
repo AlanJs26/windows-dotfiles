@@ -4,11 +4,8 @@ function dots {
         [string[]] $DotsArgs
     )
 
-    
-
     try {
-	& "$HOME\Documents\dots\.venv\Scripts\dots.exe" @DotsArgs
-        #uv run runner.py @DotsArgs
+	    & "$HOME\Documents\dots\.venv\Scripts\dots.exe" @DotsArgs
     }
     finally {
         Pop-Location
@@ -17,4 +14,5 @@ function dots {
 
 
 Invoke-Expression (&starship init powershell)
-Invoke-Expression (&  { (zoxide init powershell | Out-String) } )
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
+Invoke-Expression (& { (atuin init powershell --disable-up-arrow | Out-String) })
