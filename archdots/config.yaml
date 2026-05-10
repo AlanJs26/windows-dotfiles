@@ -3,36 +3,42 @@ chezmoi:
 - ~/Documents/WindowsPowerShell
 ignored_pkgs:
   winget:
+  - Microsoft.VCRedist.2015+.x64
   - Microsoft.VCLibs.Desktop.14
   - Microsoft.VCLibs.14
   - Microsoft.EdgeWebView2Runtime
-  - Microsoft.VCRedist.2015+.x64
   - Microsoft.WindowsAppRuntime.1.8
   - Microsoft.UI.Xaml.2.8
 pkgs:
   scoop:
   - chezmoi
+  - CascadiaCode-NF-Mono
+  - CascadiaCode-NF
+  - CascadiaCode-NF-Propo
   winget:
-  - Vencord.Vesktop
-  - Vivaldi.Vivaldi
   - Microsoft.AppInstaller
+  - jasongin.nvs
+  - Microsoft.VisualStudioCode
+  - qBittorrent.qBittorrent
+  - Vivaldi.Vivaldi
+  - Starship.Starship
+  - Git.Git
+  - PDFArranger.PDFArranger
   - BurntSushi.ripgrep.MSVC
+  - Oven-sh.Bun
   - Microsoft.WindowsTerminal
   - Neovim.Neovim
-  - Git.Git
   - Microsoft.PowerShell
-  - Microsoft.VisualStudioCode
-  - chrisant996.Clink
-  - ajeetdsouza.zoxide
-  - PDFArranger.PDFArranger
-  - qBittorrent.qBittorrent
-  - GitHub.cli
-  - Starship.Starship
-  - Oven-sh.Bun
-  - jasongin.nvs
   - gerardog.gsudo
-  - FilesCommunity.Files
   - Microsoft.DotNet.Framework.DeveloperPack.4.6
-  - Microsoft.DotNet.Framework.DeveloperPack_4
   - Atuinsh.Atuin
   - Microsoft.DotNet.DesktopRuntime.10
+  - Microsoft.DotNet.Framework.DeveloperPack_4
+  - chrisant996.Clink
+  - GitHub.cli
+  - Vencord.Vesktop
+  - FilesCommunity.Files
+  - ajeetdsouza.zoxide
+  - BlenderFoundation.Blender
+  - Microsoft.DotNet.Native.Runtime
+  - Canva.Affinity

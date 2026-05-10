@@ -4,7 +4,7 @@ depends=('winget:Starship.Starship' 'winget:chrisant996.Clink')
 source=()
 platform='windows'
 
-install() {
+install_powershell() {
     # Redefinição local de variáveis (necessário para o parser)
     $clinkScriptsDir = Join-Path $env:LOCALAPPDATA "clink"
     $starshipLua = Join-Path $clinkScriptsDir "starship.lua"
@@ -34,7 +34,7 @@ install() {
     }
 }
 
-uninstall() {
+uninstall_powershell() {
     $clinkScriptsDir = Join-Path $env:LOCALAPPDATA "clink"
     $starshipLua = Join-Path $clinkScriptsDir "starship.lua"
     $initLine = 'Invoke-Expression (&starship init powershell)'
@@ -51,7 +51,7 @@ uninstall() {
     if (Test-Path $starshipLua) { Remove-Item $starshipLua -Force }
 }
 
-check() {
+check_powershell() {
     $clinkScriptsDir = Join-Path $env:LOCALAPPDATA "clink"
     $starshipLua = Join-Path $clinkScriptsDir "starship.lua"
     $initLine = 'Invoke-Expression (&starship init powershell)'

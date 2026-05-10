@@ -13,7 +13,7 @@ platform='windows'
 # $PKGPATH has the path to folder containing this file 
 
 # This function is used to configure the health script
-install() {
+install_powershell() {
     $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $profileDir = Split-Path -Parent $profilePath
 
@@ -124,7 +124,7 @@ clink.onfilterinput(onfilterinput)
 }
 
 # This function is used to unconfigure the health script
-uninstall() {
+uninstall_powershell() {
     $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $powershellInitLine = 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
 
@@ -151,7 +151,7 @@ uninstall() {
 
 # This function should end with exit code 0 when the health script is configured
 # and end with exit code 1 when it is unconfigured
-check() {
+check_powershell() {
     $powershellInitLine = 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
     $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $hasProfileLine = $false

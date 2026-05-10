@@ -4,7 +4,7 @@ depends=('winget:Atuinsh.Atuin')
 source=()
 platform='windows'
 
-install() {
+install_powershell() {
     $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $profileDir = Split-Path -Parent $profilePath
 
@@ -28,7 +28,7 @@ install() {
     }
 }
 
-uninstall() {
+uninstall_powershell() {
     $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $atuinInitLine = 'Invoke-Expression (& { (atuin init powershell --disable-up-arrow | Out-String) })'
 
@@ -38,7 +38,7 @@ uninstall() {
     }
 }
 
-check() {
+check_powershell() {
     $atuinInitLine = 'Invoke-Expression (& { (atuin init powershell --disable-up-arrow | Out-String) })'
     $profilePath = (Join-Path (Split-Path $PROFILE -Parent) profile.ps1)
     $hasProfileLine = $false

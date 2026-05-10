@@ -1,8 +1,10 @@
-description='runs a wintool.json file with some tweaks'
+description='setup neovim config'
 url=''
-depends=()
+depends=('winget:Neovim.Neovim')
 source=()
 # source_on_check=false
+# asks user for elevated privileges
+# elevated=false
 # make this health script platform specific. Supported platforms: linux, windows 
 platform='windows'
 
@@ -13,23 +15,33 @@ platform='windows'
 # $PKGPATH has the path to folder containing this file 
 
 # This function is used to configure the health script
-install_powershell() {
-    & ([ScriptBlock]::Create((irm "https://christitus.com/win"))) -Config "$PKGPATH/wintool.json" -Run
-    New-Item "~/.wintool_ok" -ItemType File
+install() {
+    config_path="C:/Users/Alan/AppData/Local/nvim"
+    git clone git@github.com:AlanJs26/nvim_config.git "$config_path"
 }
 
 # This function is used to unconfigure the health script
-uninstall_powershell() {
-    Write-Host "You may need to undo the tweaks by yourself"
-    Write-Host "Look $PKGPATH/wintool.json and undo the tweaks by running the full gui"
-    Write-Host "irm \"https://christitus.com/win\" | iex"
-    Remove-Item -Path "~/.wintool_ok" -Force
+uninstall() {
+    config_path="C:/Users/Alan/AppData/Local/nvim"
+    rm -r "$config_path"
 }
 
 # This function should end with exit code 0 when the health script is configured
 # and end with exit code 1 when it is unconfigured
-check_powershell() {
-    if (-Not (Test-Path "~/.wintool_ok" -PathType Leaf)) {
+check() {
+    config_path="C:/Users/Alan/AppData/Local/nvim"
+    
+    if ! [ -d $config_path ]; then
         exit 1
-    }
+    fi
+
+    pushd "$config_path"
+
+    if ! [[ "$(git remote -v)" =~ 'AlanJs26/nvim_config' ]]; then
+        exit 1
+    fi
+
+    popd
+
+    exit 0
 }
